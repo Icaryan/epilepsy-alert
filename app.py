@@ -7,6 +7,12 @@ import cv2
 
 from multiprocessing import Process, Queue
 
+import schedule
+import sched
+
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
+
 import analyzer
 
 qtt_frame = 0
@@ -118,9 +124,10 @@ def analyze_video(reference):
 
     frames = Queue()
     dang_secs = Queue()
+    brightness = Queue()
 
     procs = []
-    proc = Process(target=anl.run, args=(frames, dang_secs,))
+    proc = Process(target=anl.run, args=(frames, dang_secs, brightness,))
     procs.append(proc)
     proc.start()
     
@@ -154,6 +161,7 @@ def analyze_video(reference):
         video = cv2.VideoCapture(reference)
 
     global fps
+    global delay
     fps = video.get(cv2.CAP_PROP_FPS)
     delay = int(video.get(cv2.CAP_PROP_FPS) / 2)
     duration = video.get(cv2.CAP_PROP_FRAME_COUNT) / (delay * 2)
@@ -164,16 +172,20 @@ def analyze_video(reference):
     qtt_frame = 0
     show_frames(frames, dang_secs, l1, c1, rect, delay)
     
+    show_luminance_history(brightness)
+
     window.withdraw()
 
-    print(spix_read())
+    # print(spix_read())
 
     root.wait_window()
 
     video.release()
     window.deiconify()
     root.destroy()
-    procs[0].terminate()
+    
+    for p in procs:
+        p.terminate()
 
 
 
@@ -201,6 +213,61 @@ def init_frame(last_frame=None):
     btn_path = tk.Button(frm_main, width=15, font=("Roboto",12), text="Video Path", command=lambda: get_video_path())
     btn_path.pack(pady=10)
 
+
+
+def show_luminance_history(brightness : Queue):
+    root = tk.Toplevel(window)
+    
+    width = 1080
+    height = 720
+    
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+    
+    x = (screen_width/2) - (width/2)
+    y = (screen_height/2) - (height/2)
+    
+    root.geometry('%dx%d+%d+%d' % (width, height, x, y))
+
+    fig = Figure(figsize = (5, 5), dpi = 100)
+    plot1 = fig.add_subplot(111)
+
+    canvas = FigureCanvasTkAgg(fig, master = root)  
+    canvas.draw()
+
+    canvas.get_tk_widget().pack()
+
+    toolbar = NavigationToolbar2Tk(canvas, root)
+    toolbar.update()
+
+    canvas.get_tk_widget().pack()
+
+    global datas
+    datas = []
+
+    show_plot(brightness, plot1, canvas, root)
+
+
+def show_plot(brightness : Queue, plot1, canvas : FigureCanvasTkAgg, root : tk.Tk):
+    
+    if brightness.qsize() > 0:
+        data = brightness.get()
+        if data not in datas:
+            datas.append(data)
+            
+            if len(datas) % int(fps) == 0:
+                plot1.cla()
+                
+                if len(datas) > 300:
+                    plot1.plot(datas[len(datas)-300:-1], color="blue")
+                else:
+                    plot1.plot(datas, color="blue")
+
+                plot1.axis([0, 300, 0, 300])
+                canvas.draw()
+                
+    root.after(1, lambda: show_plot(brightness, plot1, canvas, root))
+        
 
 
 def spix_read():
@@ -239,6 +306,8 @@ if __name__ == "__main__":
     url_test = [
         "https://www.youtube.com/watch?v=FXqp9WiFWzc"
     ]
+
+    global window
 
     window = tk.Tk()
 

@@ -25,7 +25,7 @@ class analyzer:
 
 
 
-    def run(self, frames: Queue, dang_secs: Queue):
+    def run(self, frames: Queue, dang_secs: Queue, brightness : Queue):
         ref = ""
         if self.type == "link":
             ytdlp = yt_dlp.YoutubeDL()
@@ -66,6 +66,8 @@ class analyzer:
 
             avarage_brightness = np.average(brightness_values)
             data.append(avarage_brightness)
+
+            brightness.put(avarage_brightness)
 
             i += 1
             if i % fps == 0:
