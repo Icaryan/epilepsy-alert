@@ -1,0 +1,6 @@
+matplotlib==3.5.3
+numpy==1.23.2
+opencv_python==4.6.0.66
+Pillow==9.4.0
+PyAudio==0.2.12
+yt_dlp==2023.2.17
