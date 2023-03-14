@@ -7,9 +7,6 @@ import cv2
 
 from multiprocessing import Process, Queue
 
-import schedule
-import sched
-
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
@@ -34,7 +31,7 @@ def get_worst_url(video_reference):
 
 
 
-def show_video(video, lbl: tk.Label, cnv: tk.Canvas, rect, delay):
+def show_video(video, lbl, cnv, rect, delay):
     global qtt_frame
     
     qtt_frame = qtt_frame + 1
@@ -56,7 +53,7 @@ def show_video(video, lbl: tk.Label, cnv: tk.Canvas, rect, delay):
 
 
 
-def show_frames(frames: Queue, dang_secs: Queue, lbl, cnv: tk.Canvas, rect, delay):
+def show_frames(frames, dang_secs, lbl, cnv, rect, delay):
     global qtt_frame
 
     if frames.qsize() > delay * 5:
@@ -86,7 +83,7 @@ def show_frames(frames: Queue, dang_secs: Queue, lbl, cnv: tk.Canvas, rect, dela
 
 
 
-def get_video_link(last_frame: tk.Frame):
+def get_video_link(last_frame):
     last_frame.destroy()
 
     frm_main = tk.Frame(window, width=300, height=480, bg="#000C66")
@@ -215,7 +212,7 @@ def init_frame(last_frame=None):
 
 
 
-def show_luminance_history(brightness : Queue):
+def show_luminance_history(brightness ):
     root = tk.Toplevel(window)
     
     width = 1080
@@ -248,7 +245,7 @@ def show_luminance_history(brightness : Queue):
     show_plot(brightness, plot1, canvas, root)
 
 
-def show_plot(brightness : Queue, plot1, canvas : FigureCanvasTkAgg, root : tk.Tk):
+def show_plot(brightness , plot1, canvas, root):
     
     if brightness.qsize() > 0:
         data = brightness.get()
